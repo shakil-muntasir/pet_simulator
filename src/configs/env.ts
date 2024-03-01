@@ -1,7 +1,8 @@
-import { cleanEnv, port } from 'envalid'
+import { cleanEnv, port, str } from 'envalid'
 
 const env = cleanEnv(process.env, {
-    APP_PORT: port()
+    NODE_ENV: str({ default: 'development' }),
+    PORT: port()
 })
 
 export default env
