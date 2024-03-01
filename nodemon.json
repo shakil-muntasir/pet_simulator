@@ -1,0 +1,10 @@
+{
+    "watch": ["src", ".env"],
+    "ignore": ["node_modules", "dist"],
+    "events": {
+        "start": "clear"
+    },
+    "quiet": true,
+    "ext": ".ts, .js, .json",
+    "exec": "ts-node -r dotenv/config -r tsconfig-paths/register ./src/index.ts"
+}
