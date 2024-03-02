@@ -3,56 +3,10 @@ import fs from 'fs'
 import path from 'path'
 import pc from 'picocolors'
 
+type LogLevel = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR'
+
 class Log {
     private static logsDir = path.join(process.cwd(), 'logs')
-
-    private static ensureLogDirectoryExists(): void {
-        if (!fs.existsSync(this.logsDir)) {
-            fs.mkdirSync(this.logsDir, { recursive: true })
-        }
-    }
-
-    private static getLogFileName(): string {
-        return format(new Date(), 'yyyy-MM-dd') + '.log'
-    }
-
-    private static logMessage(level: string, message: string, saveToFile: boolean = false): void {
-        const formattedMessage = `${format(new Date(), 'yyyy-MM-dd HH:mm:ss')} [${level}] - ${message}`
-
-        // Determine message color
-        let coloredMessage
-        switch (level) {
-            case 'SUCCESS':
-                coloredMessage = pc.green(formattedMessage)
-                break
-            case 'INFO':
-                coloredMessage = pc.blue(formattedMessage)
-                break
-            case 'WARNING':
-                coloredMessage = pc.yellow(formattedMessage)
-                break
-            case 'ERROR':
-                coloredMessage = pc.red(formattedMessage)
-                break
-            default:
-                coloredMessage = formattedMessage
-                break
-        }
-
-        // Log to console
-        console.log(coloredMessage)
-
-        // Optionally save to log file
-        if (saveToFile) {
-            this.ensureLogDirectoryExists()
-            const logFilePath = path.join(this.logsDir, this.getLogFileName())
-            fs.appendFile(logFilePath, formattedMessage + '\n', err => {
-                if (err) {
-                    console.error(pc.red('Failed to write to log file:'), err)
-                }
-            })
-        }
-    }
 
     /**
      * Log a success message
@@ -100,6 +54,76 @@ class Log {
      */
     public static error(message: string, saveToFile: boolean = false): void {
         this.logMessage('ERROR', message, saveToFile)
+    }
+
+    /**
+     * Write a log message to a file
+     *
+     * @param level
+     * @param message
+     *
+     * @return void
+     *
+     */
+    public static writeToFile(level: LogLevel, message: string): void {
+        const formattedMessage = this.getFormattedMessage(level, message)
+
+        this.ensureLogDirectoryExists()
+        const logFilePath = path.join(this.logsDir, this.getLogFileName())
+        fs.appendFile(logFilePath, formattedMessage + '\n', error => {
+            if (error) {
+                console.error(pc.red('Failed to write to log file:'), error)
+            }
+        })
+    }
+
+    private static logMessage(level: LogLevel, message: string, saveToFile: boolean = false): void {
+        const formattedMessage = this.getFormattedMessage(level, message)
+
+        // Log to console
+        console.log(this.getColoredMessage(level, formattedMessage))
+
+        // Optionally save to log file
+        if (saveToFile) {
+            this.writeToFile(level, message)
+        }
+    }
+
+    private static getFormattedMessage(level: LogLevel, message: string) {
+        return `${format(new Date(), 'yyyy-MM-dd HH:mm:ss')} [${level}] - ${message}`
+    }
+
+    private static ensureLogDirectoryExists(): void {
+        if (!fs.existsSync(this.logsDir)) {
+            fs.mkdirSync(this.logsDir, { recursive: true })
+        }
+    }
+
+    private static getLogFileName(): string {
+        return format(new Date(), 'yyyy-MM-dd') + '.log'
+    }
+
+    private static getColoredMessage(level: string, message: string) {
+        let coloredMessage: string
+        switch (level) {
+            case 'SUCCESS':
+                coloredMessage = pc.green(message)
+                break
+            case 'INFO':
+                coloredMessage = pc.blue(message)
+                break
+            case 'WARNING':
+                coloredMessage = pc.yellow(message)
+                break
+            case 'ERROR':
+                coloredMessage = pc.red(message)
+                break
+            default:
+                coloredMessage = message
+                break
+        }
+
+        return coloredMessage
     }
 }
 
